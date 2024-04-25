@@ -33,38 +33,76 @@ def load_info_employee(file_name, year, month, i):
         string_end_absence = ws[f'I{i}'].value
     else:
         absence_reason = ws[f'D{i}'].value
-        string_start_absence = ws[f'G{i}'].value
+        string_start_absence = str(ws[f'G{i}'].value)
+        print(string_start_absence)
+        print(type(string_start_absence))
         string_end_absence = ws[f'H{i}'].value
+        print(string_end_absence)
+        print(type(string_end_absence))
+
     # преобразует ее в код
     absence_reason_code = letter_code(absence_reason)
     
 
     # преобразует дату начала отсутствия в формат datetime
-    date_start_absence = datetime.strptime(string_start_absence, '%d.%m.%Y')
-    # преобразует дату окончания отсутствия в формат datetime
-    if 'предположительно' in string_end_absence.lower():
-        date_end_absence = datetime.strptime(
-            string_end_absence.lower(),
-            'предположительно до %d.%m.%Y 0:00:00'
-        )
+    if type(string_start_absence) is datetime:
+        date_start_absence = string_start_absence
     else:
-        date_end_absence = datetime.strptime(
-            string_end_absence.lower(), '%d.%m.%Y'
-        )
+        try:
+            date_start_absence = datetime.strptime(string_start_absence, '%d.%m.%Y')
+        except:
+            date_start_absence = datetime.strptime(string_start_absence,'%Y-%m-%d %H:%M:%S')
+
+    if type(string_end_absence) is datetime:
+        date_end_absence = string_end_absence
+    else:
+        try:
+            # преобразует дату окончания отсутствия в формат datetime
+            if 'предположительно' in string_end_absence.lower():
+                date_end_absence = datetime.strptime(
+                    string_end_absence.lower(),
+                    'предположительно до %d.%m.%Y 0:00:00'
+                )
+            else:
+                date_end_absence = datetime.strptime(
+                    string_end_absence.lower(), '%d.%m.%Y'
+                )
+        except:
+            date_end_absence = datetime.strptime(string_end_absence,'%Y-%m-%d %H:%M:%S')
+        
     # если дата начала отсутствия выпадает на текущий месяц,
     # то начинает счет с нее
-    if date_start_absence >= datetime(year, month, 1):
+    if datetime(year, month, monthrange(year, month)[1]) >= date_start_absence >= datetime(year, month, 1):
         current_date = date_start_absence
+        # если дата конца больше или равна дате начала
+        # и выпадает на текущий месяц
+        if datetime(year, month, monthrange(year, month)[1]) >= date_end_absence >= current_date:
+            # заканчиваем последней датой отстутствия
+            end_date = date_end_absence
+        # если дата конца отсутствия выпадает на следующий месяц
+        elif date_end_absence > datetime(year, month, monthrange(year, month)[1]):
+            # то последняя дата отсутствия - последний день текущего месяца
+            end_date = datetime(year, month, monthrange(year, month)[1])
+        else:
+            return absence
+    # если дата до начала текущего месяца
+    elif date_start_absence < datetime(year, month, 1):
+        # и дата конца после или равна началу текущего месяца
+        if datetime(year, month, monthrange(year, month)[1]) >= date_end_absence >= datetime(year, month, 1):
+            # то начинаем счет с первого дня месяца.
+            current_date = datetime(year, month, 1)
+            # заканчиваем последней датой отстутствия
+            end_date = date_end_absence
+        # если дата конца отсутствия выпадает на следующий месяц
+        elif date_end_absence > datetime(year, month, monthrange(year, month)[1]):
+            # то начинаем счет с первого дня месяца.
+            current_date = datetime(year, month, 1)
+            # то последняя дата отсутствия - последний день текущего месяца
+            end_date = datetime(year, month, monthrange(year, month)[1])
+        else:
+            return absence
     else:
-        current_date = datetime(year, month, 1)
-    # если дата конца отсутствия выпадает на текущий месяц
-    if date_end_absence <= datetime(year, month, monthrange(year, month)[1]):
-        # то конец - последняя дата отсутствия
-        end_date = date_end_absence
-    # если нет,    
-    else:
-    # то последний день месяца
-        end_date = datetime(year, month, monthrange(year, month)[1])
+        return absence
     # проходимся по всем датам отсутствия
     while current_date != end_date + timedelta(days=1):
         # записывает дату и причину в словарь
@@ -73,35 +111,6 @@ def load_info_employee(file_name, year, month, i):
         current_date += timedelta(days=1)
     # возвращает словарь с датами отсутствия
     return absence
-
-
-#def search_employee(file_name, last_name,
-#                    first_name, patronymic, internal_combine,
-#                    year, month):
-#    """Ищет сотрудника в списке отсутствующих
-#    и записывает все дни отсутствия с причинами в словарь"""
-#    absence = {}
-#    i = 6
-#    if 'подразделение' in file_name:
-#        letter = 'A'
-#    else:
-#        letter = 'B'
-#    wb = load_workbook(file_name)
-#    ws = wb.active
-#    while ws[f'{letter}{i}'].value is not None:
-#        string = ws[f'{letter}{i}'].value
-#        print(string)
-#        if internal_combine is not None:
-#            if (last_name + ' ' + first_name + ' ' + patronymic in string
-#                    and 'совм' in string):
-#                absence.update(load_info_employee(file_name, year, month, i))
-#                print(load_info_employee(file_name, year, month, i))
-#        else:
-#            if last_name + ' ' + first_name + ' ' + patronymic in string:
-#                absence.update(load_info_employee(file_name, year, month, i))
-#                print(load_info_employee(file_name, year, month, i))
-#        i += 1
-#    return absence
 
 
 def search_all_employees(file_name, year, month):
