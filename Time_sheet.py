@@ -333,7 +333,7 @@ class FormTimeSheet(BaseForm):
     """Форма заполнения табеля"""
     def put_widgets(self):
         self.months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-        self.full_month = BooleanVar(0)
+        self.full_month = BooleanVar(value=False)
         self.file_name_absence = None
 
         # Ввод года в фомате ХХХХ

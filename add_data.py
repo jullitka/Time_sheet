@@ -20,7 +20,7 @@ def load_info_employee(file_name, year, month, i):
         wb = load_workbook(file_name)
         ws = wb.active
     except:
-        return {}    
+        return {}
     # словарь для записи даты и причины отсутствия
     absence = {}
     # получает причину отсутствия
@@ -34,15 +34,11 @@ def load_info_employee(file_name, year, month, i):
     else:
         absence_reason = ws[f'D{i}'].value
         string_start_absence = str(ws[f'G{i}'].value)
-        print(string_start_absence)
-        print(type(string_start_absence))
         string_end_absence = ws[f'H{i}'].value
-        print(string_end_absence)
-        print(type(string_end_absence))
 
     # преобразует ее в код
     absence_reason_code = letter_code(absence_reason)
-    
+
 
     # преобразует дату начала отсутствия в формат datetime
     if type(string_start_absence) is datetime:
@@ -69,7 +65,7 @@ def load_info_employee(file_name, year, month, i):
                 )
         except:
             date_end_absence = datetime.strptime(string_end_absence,'%Y-%m-%d %H:%M:%S')
-        
+
     # если дата начала отсутствия выпадает на текущий месяц,
     # то начинает счет с нее
     if datetime(year, month, monthrange(year, month)[1]) >= date_start_absence >= datetime(year, month, 1):
