@@ -1,2 +1,2 @@
 Создание исполняемого файла:
-   pyinstaller --onedir --add-data "employees.db;." --hidden-import babel.numbers app.py
+   pyinstaller --onedir --add-data "employees.db;." --hidden-import babel.numbers Time_sheet.py
